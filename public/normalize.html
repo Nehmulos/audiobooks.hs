@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script type="text/javascript" src="lib/jquery-1.7.1.js"></script>
+        <script type="text/javascript" language="javascript" charset="utf-8">
+        // <![CDATA[
+            $(function() {
+                $(".normalizeButtion").click(function() {
+                    $(".progress").empty();
+                    $(".progress").append($("<li>"+new Date()+" Normalization started...</li>"));
+                    $.getJSON("/api/normalize", function(data) {
+                        $(".progress").append($("<li>"+new Date()+" finished with status: '"+data.status+"'</li>"));
+                    });
+                });
+            })
+        // ]]>
+        </script>
+    </head>
+    <body>
+        <p>
+            <a href="/">Return to player</a>
+        </p>
+        <p>
+            <input class="normalizeButtion" type="button" value="start normalization"/>
+            <ul class="progress">
+            </ul>
+        </p>
+    </body>
+</html>

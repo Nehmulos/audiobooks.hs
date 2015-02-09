@@ -1,0 +1,20 @@
+This is a WIP LEARNING PROJECT
+I've got no Idea what I'm doing, but I'm doing it to get some practical
+experience with haskell.
+
+The js version can be found here: https://github.com/Nehmulos/audiobooks.js
+
+This thing should start a http server and provide:
+- an API to list existing authors and their books
+- an API to play something with mplayer on the server
+- an API to stream something to an (audio-tag) client
+- feature creep bullshit nobody needs
+- a web gui to control it all
+
+============= How to =============
+Put your files into this directory structure:
+public/books/$AUTHOR/$BOOK/$CD/$TRACK.ogg
+
+you can add covers as cover.(png/jpg/jpeg) in:
+public/books/$AUTHOR/cover.png
+public/books/$AUTHOR/$BOOK/cover.png

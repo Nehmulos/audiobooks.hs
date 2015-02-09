@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <link rel="stylesheet" href="css/layout.css" type="text/css" media="screen" title="no title" charset="utf-8" />
+        <script type="text/javascript" charset="utf-8" src="lib/jquery-1.8.3.js"></script>
+        <script type="text/javascript" charset="utf-8" src="src/Player.js"></script>
+        <script type="text/javascript" charset="utf-8" src="src/WebPlayer.js"></script>
+        <script type="text/javascript" charset="utf-8" src="src/RemotePlayer.js"></script>
+        <script type="text/javascript" charset="utf-8" src="src/Application.js"></script>
+        <script type="text/javascript" charset="utf-8" src="src/Toolbar.js"></script>
+        <script type="text/javascript" charset="utf-8" src="src/Tools.js"></script>
+        <script type="text/javascript" charset="utf-8" src="src/PlayerGui.js"></script>
+        
+        <script type="text/javascript" charset="utf-8" src="src/Cover.js"></script>
+        <script type="text/javascript" charset="utf-8" src="src/Screen.js"></script>
+        <script type="text/javascript" charset="utf-8" src="src/AuthorsScreen.js"></script>
+        <script type="text/javascript" charset="utf-8" src="src/BooksScreen.js"></script>
+        <script type="text/javascript" charset="utf-8" src="src/TrackScreen.js"></script>
+        <script type="text/javascript" charset="utf-8" src="src/Radiolist.js"></script>
+        <script type="text/javascript" charset="utf-8" src="src/Utils.js"></script>
+        <script type="text/javascript" charset="utf-8" >
+        // <![CDATA[
+            var app;
+            $(function() 
+            {
+                app = new Application();
+                app.setScreenFromLocationHash();
+                $(window).bind("hashchange", function()
+                {
+                    app.setScreenFromLocationHash();
+                });
+            });
+        // ]]>
+        </script>
+        <title>Audiobooks node edition</title>
+    </head>
+    <body>
+        <div id="toolbar">
+            <div class="navigation">        
+                <a href="#!/"><img class="homeIcon" src="img/homeIcon.png"/></a>
+                <span class="authorName"></span>
+                <span class="bookName"></span>
+            </div>
+            <div class="tools">
+                <img class="icon tool toggleSpeakersButton" src="img/speakerIcon.png"/>
+                <img class="icon tool showRadiosButton" src="img/radioIcon.png"/>
+            </div>
+        </div>
+        <div id="radioList" style="display:none;">
+            <ul>
+                <li class="radioLink" data-url="http://dradio-ogg-dlf-l.akacast.akamaistream.net/7/629/135496/v1/gnl.akacast.akamaistream.net/dradio_ogg_dlf_l">
+                    Deutschlandfunk
+                </li>
+                <li class="radioLink" data-url="http://dradio.ic.llnwd.net/stream/dradio_dkultur_m_b.ogg">
+                    DR-Kultur
+                </li>
+                <li class="radioLink" data-url="http://dradio.ic.llnwd.net/stream/dradio_dwissen_m_b.ogg">
+                    DR-Wissen
+                </li>
+                <li class="radioLink" data-url="http://sc1.chronixradio.com:10010">
+                    ChroniX Agression
+                </li>
+                <li class="radioLink" data-url="http://sc1.chronixradio.com:10100">
+                    ChroniX Metal
+                </li>
+                <li class="radioLink" data-url="http://sc1.chronixradio.com:10300/">
+                    ChroniX Metal Masters
+                </li>
+            </ul>
+        </div>
+        <div id="main">You must enable Javascript, otherwiese this page won't work</div>
+        <div id="footer">
+            <div class="playerGui">
+                <div class="nowPlayingText">
+                    <span class="track">Nothing</span>
+                    <span class="dash"> - </span>
+                    <span class="artistIntroduction">by </span>
+                    <span class="artist">Nobody</span>
+                <div/>
+                <span class="stopButton">■</span>
+                <span class="pauseButton disabled">II</span>
+                <span class="playButton disabled" style="display:none;">▶</span>
+                <progress class="progressBar" value="0" max="100"></progress>
+                <div class="volumeSettings">
+                    <img class="volumeIcon" src="img/volumeIcon.png"/>
+                    <div class="percentageBar"><div class="disabledFill"></div>
+                </div>
+            </div>
+            <audio id="audioPlayer" controls="seeking" style="display:none;"></audio>
+        </div>
+    </body>
+</html>
