@@ -24,9 +24,8 @@ printEmpty = writeBS "TODO"
 apiArray =
  [ ("api", printApi)
  , ("api/authors.json", authors)
- , ("api/artists.json", printEmpty) -- just an alias for deprecated stuff
- , ("api/authors.json", printEmpty)
- , ("api/author.json", printEmpty)
+ , ("api/artists.json", authors) -- just an alias for deprecated stuff
+ , ("api/author.json", author)
  , ("api/book.json", printEmpty)
  , ("api/normalize", printEmpty)
  , ("api/play", printEmpty)
@@ -55,14 +54,18 @@ authorsPath = booksRoot
 type Author = B.ByteString
 type Cover = B.ByteString
 
-authorsArray :: IO [Author]
-authorsArray = do
-  dirNames  <- getDirectoryContents (authorsPath)
+subDirs :: FilePath -> IO [FilePath]
+subDirs path = do
+  dirNames  <- getDirectoryContents path
   existing  <- filterM (\x -> (do
-                               exists <- doesDirectoryExist (authorsPath ++ x)
+
+                               exists <- doesDirectoryExist (path ++ x)
                                return (exists && not(x == ".") && not(x == "..")))) dirNames
-  dirNamesB <- mapM (return . B.pack) existing
+  dirNamesB <- mapM (return) existing
   return dirNamesB
+
+authorsArray :: IO [FilePath]
+authorsArray = subDirs authorsPath
 
 cover :: FilePath -> FilePath -> IO (Maybe FilePath)
 cover prefix current =
@@ -71,7 +74,7 @@ cover prefix current =
     foldM (\acc v -> if (mempty == acc)
                      then (do
                             exists <- doesFileExist (p ++ "/cover" ++ v)
-                            print (p ++ "/cover" ++ v)
+                            print p
                             if exists
                             then return (Just (current ++ "/cover" ++ v))
                             else return acc)
@@ -84,11 +87,9 @@ cover prefix current =
 --         | doesFileExist (p ++ "/cover.jpeg") = Just (p ++ "/cover.jpeg")
 --         | otherwise = Nothing
 
-coverJson :: FilePath -> JSString
-coverJson = toJSString
+filterCovers :: [(Maybe FilePath)] -> [FilePath]
+filterCovers cs = map (fromJust) $ filter (isJust) cs
 
-coversJson :: [FilePath] -> [JSString]
-coversJson = map (coverJson)
 
 authorsJson :: [FilePath] -> [FilePath] -> JSObject JSValue
 authorsJson as cs = toJSObject [ ("authors", JSArray $ map (JSString . toJSString) as)
@@ -98,12 +99,25 @@ authorsJson as cs = toJSObject [ ("authors", JSArray $ map (JSString . toJSStrin
 authors :: MonadSnap m => m ()
 authors = do
   a <- liftIO authorsArray
-  c <- liftIO $ sequence $ map ((cover authorsPath) . B.unpack) a
+  c <- liftIO $ sequence $ map (cover authorsPath) a
   -- show $ showJSON $ JSArray
   writeBS $ B.pack $ (showJSObject $ authorsJson
-                                       (map (B.unpack) a)
+                                       a
                                        (map (fromJust) $ filter (isJust) c)
                      ) ""
+
+authorJson :: [FilePath] -> [FilePath] -> JSObject JSValue
+authorJson bs cs = toJSObject [ ("books", JSArray $ map (JSString . toJSString) bs)
+                              , ("covers", JSArray $ map (JSString . toJSString) cs)
+                              ]
+
+author :: MonadSnap m => m ()
+author = do
+  req <- getRequest
+  let p = authorsPath ++ (B.unpack $ fromJust $ urlDecode $ rqQueryString req) ++ "/" in (do
+    b <- liftIO $ subDirs p
+    c <- liftIO $ sequence $ map (cover p) b
+    writeBS $ B.pack $ (showJSObject $ authorJson b (filterCovers c)) "")
 
 -- apiRoutes = map (\v -> (fst v, snd v)) apiArray
 
