@@ -13,6 +13,8 @@ import           System.Directory
 import           Data.List (find)
 import           Data.Maybe
 import           Text.JSON
+import qualified Filesystem.Path.CurrentOS as P
+import           Data.Text (unpack)
 
 import Control.Monad.IO.Class (MonadIO (..))
 
@@ -26,7 +28,7 @@ apiArray =
  , ("api/authors.json", authors)
  , ("api/artists.json", authors) -- just an alias for deprecated stuff
  , ("api/author.json", author)
- , ("api/book.json", printEmpty)
+ , ("api/book.json", book)
  , ("api/normalize", printEmpty)
  , ("api/play", printEmpty)
  , ("api/setTrackList", printEmpty)
@@ -54,15 +56,21 @@ authorsPath = booksRoot
 type Author = B.ByteString
 type Cover = B.ByteString
 
-subDirs :: FilePath -> IO [FilePath]
-subDirs path = do
+subFS :: (FilePath -> IO Bool) -> FilePath -> IO [FilePath]
+subFS check path = do
   dirNames  <- getDirectoryContents path
   existing  <- filterM (\x -> (do
-
-                               exists <- doesDirectoryExist (path ++ x)
+                               exists <- check (path ++ x)
                                return (exists && not(x == ".") && not(x == "..")))) dirNames
   dirNamesB <- mapM (return) existing
   return dirNamesB
+
+subFiles :: FilePath -> IO [FilePath]
+subFiles = subFS doesFileExist
+
+subDirs :: FilePath -> IO [FilePath]
+subDirs = subFS doesDirectoryExist
+
 
 authorsArray :: IO [FilePath]
 authorsArray = subDirs authorsPath
@@ -74,7 +82,6 @@ cover prefix current =
     foldM (\acc v -> if (mempty == acc)
                      then (do
                             exists <- doesFileExist (p ++ "/cover" ++ v)
-                            print p
                             if exists
                             then return (Just (current ++ "/cover" ++ v))
                             else return acc)
@@ -121,6 +128,51 @@ author = do
 
 -- apiRoutes = map (\v -> (fst v, snd v)) apiArray
 
+isMediaExt :: String -> Bool
+isMediaExt ext
+    | ext == "ogg"  = True
+    | ext == "wav"  = True
+    | ext == "opus" = True
+    | ext == "flac" = True
+    | ext == "aac"  = True
+    | ext == "mp3"  = True
+    | otherwise = False
+
+cd :: FilePath -> IO (String, [FilePath])
+cd p = do
+  files <- subFiles (p ++ "/")
+  return (P.encodeString $ P.filename (P.decodeString p),
+          map (P.encodeString) $ filter (\f -> case P.extension f of
+                                                 Just ext -> (isMediaExt $ unpack ext)
+                                                 Nothing  -> False)
+         $ map (P.decodeString) files)
+
+
+
+cdJson :: (String, [FilePath]) -> JSObject JSValue
+cdJson (name, tracks) = toJSObject [ ("name", JSString (toJSString name))
+                                   , ("tracks", JSArray $ map (JSString . toJSString) tracks)
+                                   ]
+bookJson :: [JSObject JSValue] -> JSObject JSValue
+bookJson cds = toJSObject [ ("cds", JSArray $ map (JSObject) cds) ]
+
+book' :: FilePath -> FilePath -> IO (JSObject JSValue)
+book' a b =
+  let p = (authorsPath ++ a ++ "/" ++ b ++ "/") in (do
+    cdDirs <- subDirs p
+    cds <- sequence $ map (cd . ((++) p)) cdDirs
+    return $ bookJson $ map (cdJson) cds)
+
+book :: MonadSnap m => m ()
+book = do
+  a <- getQueryParam "author"
+  b <- getQueryParam "book"
+  if (isJust a) && (isJust b)
+  then do
+    bjs <- liftIO $ book' (B.unpack $ fromJust a) (B.unpack $ fromJust b)
+    writeBS $ B.pack $ (showJSObject bjs) ""
+  else writeBS "error please supply ?author=foo&query=bar"
+
 appendSlash :: B.ByteString -> B.ByteString
 appendSlash = (flip B.append) "/"
 
@@ -130,7 +182,6 @@ site :: Snap ()
 site =
     id (serveDirectory "public") <|>
     route apiArray
-
 
 echoHandler :: Snap ()
 echoHandler = do
