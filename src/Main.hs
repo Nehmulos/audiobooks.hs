@@ -8,7 +8,6 @@ import           Snap.Core
 import           Snap.Util.FileServe
 import           Snap.Http.Server
 import qualified Data.ByteString.Char8 as B
-import           AnyDir
 import           System.Directory
 import           Data.List (find)
 import           Data.Maybe
@@ -177,6 +176,15 @@ appendSlash :: B.ByteString -> B.ByteString
 appendSlash = (flip B.append) "/"
 
 printApi = writeBS (B.unlines (map (appendSlash . fst) apiArray))
+
+-- api/setTrackList
+-- {"trackList":["books/2hushit/gensokyo 1/CD1/2hushit - Gensokyo 1- Music For Shrine Maidens - 10 Lewd Butts.ogg"]}
+-- api/unPause
+-- api/activateTimeout
+
+
+
+
 
 site :: Snap ()
 site =
