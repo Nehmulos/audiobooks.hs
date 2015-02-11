@@ -12,6 +12,7 @@ import qualified Data.ByteString.Char8 as B
 import Control.Monad.IO.Class (MonadIO (..))
 
 import qualified Listing
+import qualified Player
 
 main :: IO ()
 main = quickHttpServe site
@@ -25,8 +26,8 @@ apiArray =
  , ("api/author.json", Listing.author)
  , ("api/book.json", Listing.book)
  , ("api/normalize", printEmpty)
- , ("api/play", printEmpty)
- , ("api/setTrackList", printEmpty)
+ , ("api/play", Player.play)
+ , ("api/setTrackList", Player.setTrackList)
  , ("api/togglePause", printEmpty)
  , ("api/pause", printEmpty)
  , ("api/unPause", printEmpty)
@@ -49,13 +50,6 @@ appendSlash :: B.ByteString -> B.ByteString
 appendSlash = (flip B.append) "/"
 
 printApi = writeBS (B.unlines (map (appendSlash . fst) apiArray))
-
--- api/setTrackList
--- {"trackList":["books/2hushit/gensokyo 1/CD1/2hushit - Gensokyo 1- Music For Shrine Maidens - 10 Lewd Butts.ogg"]}
--- api/unPause
--- api/activateTimeout
-
-
 
 site :: Snap ()
 site =

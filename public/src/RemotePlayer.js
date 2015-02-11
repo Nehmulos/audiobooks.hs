@@ -1,9 +1,9 @@
 function RemotePlayer() {
     Player.prototype.constructor.call(this, "RemotePlayer");
-    
+
     this.fetchPlayStatus();
     this.fetchVolume();
-    
+
     var _this = this;
     this.progressUpdater = function() {
         if (_this.status == "playing") {
@@ -17,22 +17,22 @@ function RemotePlayer() {
         }
     }
     window.setInterval(this.progressUpdater, 1000);
-    
+
     $(".tool.toggleSpeakersButton").attr("src", "img/headsetIcon.png");
 }
 RemotePlayer.prototype = new Player();
 
 RemotePlayer.prototype.setTrack = function(url) {
     var _this = this;
-    
+
     Player.prototype.setTrack.call(_this, url);
-    
+
     this.stop(function() {
         _this.setTrackList([url], function() {
             _this.play();
         });
     });
-    
+
 }
 
 RemotePlayer.prototype.fetchProgress = function() {
@@ -60,7 +60,7 @@ RemotePlayer.prototype.fetchVolume = function() {
 }
 
 RemotePlayer.prototype.stop = function(callback) {
-    
+
     var gotJson = function(data) {
         this.mplayerInstanceExists = false;
         if (callback) {
@@ -76,18 +76,18 @@ RemotePlayer.prototype.stop = function(callback) {
 RemotePlayer.prototype.setTrackList = function(url, callback) {
     Player.prototype.setTrackList.call(this, url);
     var args = {trackList: url};
-    
+
     var gotJson = function(data) {
         console.log(data);
         if (callback) {
             callback();
         }
     };
-    
+
     $.ajax({
         url: "api/setTrackList",
         type:"PUT",
-        data:JSON.stringify(args)
+        data:{ trackList: JSON.stringify(args) }
     }).done(gotJson);
 }
 
@@ -110,11 +110,11 @@ RemotePlayer.prototype.pause = function(callback) {
     Player.prototype.pause.call(this);
     $.getJSON("api/pause", function(data) {
         console.log(data);
-        
+
         if (data && !data.error) {
             _this.setStatus("paused");
         }
-        
+
         if (callback) {
             callback();
         }
@@ -137,7 +137,7 @@ RemotePlayer.prototype.playNextTrack = function() {
     // asume tracklist is already on server
     // avoid playing single tracks on remote player,
     // because that requires an active client
-    this.continuePlaying(); 
+    this.continuePlaying();
 }
 
 RemotePlayer.prototype.setVolume = function(volumePercent) {
